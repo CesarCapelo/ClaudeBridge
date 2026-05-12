@@ -11,6 +11,32 @@
 
 <body data-home="{{ home_dir }}">
 
+  <!-- ═════════════════════════════════════════════════════════════════
+       BOOT SCREEN (agujero negro coordinado con el logo)
+       ═════════════════════════════════════════════════════════════════ -->
+  <div class="boot-screen" id="boot-screen">
+    <!-- Capas de efecto, todas absolute, no afectan al flex centering -->
+    <div class="boot-bg"></div>
+    <div class="boot-halo"></div>
+    <div class="boot-ring boot-ring-1"></div>
+    <div class="boot-ring boot-ring-2"></div>
+    <div class="boot-ring boot-ring-3"></div>
+    <div class="boot-vignette"></div>
+
+    <!-- Contenido encima de los efectos -->
+    <div class="boot-content">
+      <img class="boot-logo" src="/static/claude-color.png?v={{ cache_ver }}" alt="" />
+      <div class="boot-text">
+        <h1 class="boot-title">ClaudeBridge</h1>
+        <p class="boot-subtitle">Cesar Capelo Perera</p>
+      </div>
+      <div class="boot-progress">
+        <div class="boot-progress-fill"></div>
+      </div>
+      <div class="boot-hint">Pulsa cualquier tecla para saltar</div>
+    </div>
+  </div>
+
   <!-- ── Menu bar ─────────────────────────────────────────────────────── -->
   <header class="menubar">
     <div class="menubar-left">

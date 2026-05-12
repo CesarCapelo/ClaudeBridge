@@ -5,6 +5,40 @@
 
 (function() {
 
+  /* ════════════════════════════════════════════════════════════════════
+     BOOT SCREEN
+     - Barra de carga 3.5s.
+     - Al terminar la barra: el hint pulsa invitando a interactuar.
+     - Sin auto-cierre: queda esperando hasta clic o tecla.
+     ════════════════════════════════════════════════════════════════════ */
+  (function bootScreen() {
+    const boot = document.getElementById('boot-screen');
+    if (!boot) return;
+    let dismissed = false;
+    function dismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      boot.classList.add('fading');
+      setTimeout(() => { if (boot.parentNode) boot.parentNode.removeChild(boot); }, 750);
+      document.removeEventListener('click',   dismiss);
+      document.removeEventListener('keydown', dismiss);
+    }
+    /* Al completar la barra (3.5s), cambia el hint a "ready" */
+    setTimeout(() => {
+      if (dismissed) return;
+      const hint = boot.querySelector('.boot-hint');
+      const fill = boot.querySelector('.boot-progress-fill');
+      if (fill) fill.classList.add('done');
+      if (hint) {
+        hint.textContent = 'Pulsa cualquier tecla o haz clic para entrar';
+        hint.classList.add('ready');
+      }
+    }, 3500);
+    /* Cierre solo manual */
+    document.addEventListener('click',   dismiss);
+    document.addEventListener('keydown', dismiss);
+  })();
+
   const $ = (sel, root = document) => root.querySelector(sel);
 
   /* ── Refs DOM ─────────────────────────────────────────────────────── */
