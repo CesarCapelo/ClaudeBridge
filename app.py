@@ -234,8 +234,34 @@ def git_branch():
 # ── Folder picker (diálogo nativo del SO) ───────────────────────────────────
 @app.route("/api/pick-folder", methods=["GET"])
 def pick_folder():
-    """Abre el selector de carpetas nativo (tkinter) en la máquina del servidor.
-       Como el servidor corre en localhost, el diálogo aparece para el usuario."""
+    """Abre el selector de carpetas nativo (en la máquina del servidor; como el
+       servidor corre en localhost, el diálogo aparece para el usuario).
+
+       macOS:    osascript (AppleScript). Tkinter en macOS exige el main thread
+                 y Flask sirve cada request en un worker → el proceso crashea
+                 y el navegador reporta "Network error".
+       Windows/Linux: tkinter funciona desde threads worker."""
+    import subprocess
+
+    # macOS → AppleScript (sin restricción de threads)
+    if sys.platform == "darwin":
+        try:
+            res = subprocess.run(
+                ["osascript", "-e",
+                 'POSIX path of (choose folder with prompt "Selecciona carpeta de trabajo")'],
+                capture_output=True, text=True, timeout=120,
+            )
+            # returncode != 0 cuando el usuario cancela; lo tratamos como path vacío
+            if res.returncode == 0:
+                # AppleScript devuelve la ruta con un "/" final; lo quitamos
+                return jsonify({"path": res.stdout.strip().rstrip("/")})
+            return jsonify({"path": ""})
+        except FileNotFoundError:
+            return jsonify({"error": "osascript no encontrado", "path": ""}), 500
+        except Exception as e:
+            return jsonify({"error": str(e), "path": ""}), 500
+
+    # Windows / Linux → tkinter
     try:
         import tkinter as tk
         from tkinter import filedialog
