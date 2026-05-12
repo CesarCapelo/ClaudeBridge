@@ -1253,43 +1253,55 @@ kbd {
   text-transform: uppercase;
 }
 
-.boot-progress {
-  width: 220px;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-top: 18px;
+/* Zona inferior con spinner + hint, fuera del halo del logo */
+.boot-loader {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
   pointer-events: none;
+  animation: bootLoaderIn 0.55s ease-out 0.15s both;
 }
-.boot-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #e08b6e, #cc785c);
-  width: 0;
-  animation: bootProgress 3.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  box-shadow: 0 0 14px rgba(204, 120, 92, 0.7);
+@keyframes bootLoaderIn {
+  from { opacity: 0; transform: translate(-50%, 18px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
 }
-@keyframes bootProgress {
-  0%   { width: 0%; }
-  30%  { width: 18%; }
-  55%  { width: 52%; }
-  80%  { width: 82%; }
-  95%  { width: 96%; }
-  100% { width: 100%; }
+
+/* Spinner circular estilo arranque de PC, en sintonía con la paleta cálida */
+.boot-spinner {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.08);
+  border-top-color: #e08b6e;
+  border-right-color: #cc785c;
+  animation: bootSpinnerRotate 0.9s linear infinite;
+  box-shadow: 0 0 22px rgba(204, 120, 92, 0.35);
+  pointer-events: none;
+  will-change: transform;
 }
-/* Cuando termina la barra, suaviza el glow */
-.boot-progress-fill.done {
-  animation: bootProgressGlow 1.6s ease-in-out infinite;
+@keyframes bootSpinnerRotate {
+  to { transform: rotate(360deg); }
 }
-@keyframes bootProgressGlow {
-  0%, 100% { box-shadow: 0 0 14px rgba(204, 120, 92, 0.7); }
-  50%      { box-shadow: 0 0 22px rgba(204, 120, 92, 1); }
+/* Estado "ready": glow más intenso y pulsante, sigue girando */
+.boot-spinner.done {
+  animation:
+    bootSpinnerRotate 0.9s linear infinite,
+    bootSpinnerGlow   1.6s ease-in-out infinite;
+}
+@keyframes bootSpinnerGlow {
+  0%, 100% { box-shadow: 0 0 22px rgba(204, 120, 92, 0.45); }
+  50%      { box-shadow: 0 0 34px rgba(204, 120, 92, 1);    }
 }
 
 .boot-hint {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.28);
-  margin-top: 30px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   pointer-events: none;

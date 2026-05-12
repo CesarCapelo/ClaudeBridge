@@ -23,12 +23,13 @@
       document.removeEventListener('click',   dismiss);
       document.removeEventListener('keydown', dismiss);
     }
-    /* Al completar la barra (3.5s), cambia el hint a "ready" */
+    /* Al cumplirse el tiempo de boot (3.5s): el spinner intensifica su glow
+       y el hint pasa a estado "ready" invitando a interactuar */
     setTimeout(() => {
       if (dismissed) return;
-      const hint = boot.querySelector('.boot-hint');
-      const fill = boot.querySelector('.boot-progress-fill');
-      if (fill) fill.classList.add('done');
+      const hint    = boot.querySelector('.boot-hint');
+      const spinner = boot.querySelector('.boot-spinner');
+      if (spinner) spinner.classList.add('done');
       if (hint) {
         hint.textContent = 'Pulsa cualquier tecla o haz clic para entrar';
         hint.classList.add('ready');
