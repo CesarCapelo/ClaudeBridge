@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClaudeBridge</title>
+  <link rel="icon" type="image/png" href="/static/claude-color.png?v={{ cache_ver }}" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css" />
+  <link rel="stylesheet" href="/static/style.css?v={{ cache_ver }}" />
+</head>
+
+<body data-home="{{ home_dir }}">
+
+  <!-- ── Menu bar ─────────────────────────────────────────────────────── -->
+  <header class="menubar">
+    <div class="menubar-left">
+      <div class="menu-logo" title="ClaudeBridge">
+        <img src="/static/claude-color.png?v={{ cache_ver }}" alt="Claude" />
+      </div>
+      <span class="menu-item app-name">ClaudeBridge</span>
+
+      <!-- ── Archivo ──────────────────────────────────────────── -->
+      <div class="menu-item-wrap">
+        <button class="menu-item" data-menu="archivo">Archivo</button>
+        <div class="dropdown hidden" id="dropdown-archivo">
+          <div class="dropdown-item" data-action="new-terminal">Nueva Terminal<span class="dropdown-shortcut">⌃ K</span></div>
+          <div class="dropdown-item" data-action="swarm">Swarm 8 terminales<span class="dropdown-shortcut">⌃ ⇧ K</span></div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" data-action="workspaces">Cargar workspace…<span class="dropdown-shortcut">⌃ ⇧ P</span></div>
+          <div class="dropdown-item" data-action="save-workspace">Guardar workspace actual…</div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" data-action="close-focused">Cerrar terminal enfocada<span class="dropdown-shortcut">⌥ W</span></div>
+          <div class="dropdown-item" data-action="close-all">Cerrar todas las terminales</div>
+        </div>
+      </div>
+
+      <!-- ── Terminal ─────────────────────────────────────────── -->
+      <div class="menu-item-wrap">
+        <button class="menu-item" data-menu="terminal">Terminal</button>
+        <div class="dropdown hidden" id="dropdown-terminal">
+          <div class="dropdown-item" data-action="prompts">Prompts profesionales…<span class="dropdown-shortcut">⌃ P</span></div>
+          <div class="dropdown-item" data-action="broadcast">Activar / desactivar Broadcast<span class="dropdown-shortcut">⌃ B</span></div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" data-action="clear-screen">Limpiar pantalla (clear)</div>
+          <div class="dropdown-item" data-action="send-ctrl-c">Enviar Ctrl+C (interrumpir)</div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" data-action="rename">Renombrar terminal…</div>
+          <div class="dropdown-item" data-action="remove-color">Quitar color</div>
+        </div>
+      </div>
+
+      <!-- ── Ver ──────────────────────────────────────────────── -->
+      <div class="menu-item-wrap">
+        <button class="menu-item" data-menu="ver">Ver</button>
+        <div class="dropdown hidden" id="dropdown-ver">
+          <div class="dropdown-item" data-action="toggle-theme">Tema claro / oscuro</div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" data-action="auto-tile">Mosaico automático</div>
+          <div class="dropdown-item" data-action="cascade">Cascada de ventanas</div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" data-action="shortcuts">Mostrar atajos<span class="dropdown-shortcut">?</span></div>
+        </div>
+      </div>
+
+      <!-- ── Ventana ──────────────────────────────────────────── -->
+      <div class="menu-item-wrap">
+        <button class="menu-item" data-menu="ventana">Ventana</button>
+        <div class="dropdown hidden" id="dropdown-ventana">
+          <div class="dropdown-item" data-action="minimize">Minimizar<span class="dropdown-shortcut">⌃ M</span></div>
+          <div class="dropdown-item" data-action="maximize">Maximizar / Restaurar</div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" data-action="snap-left">Snap a la izquierda</div>
+          <div class="dropdown-item" data-action="snap-right">Snap a la derecha</div>
+          <div class="dropdown-item" data-action="snap-full">Pantalla completa</div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" data-action="restore-all">Restaurar minimizadas</div>
+        </div>
+      </div>
+
+      <!-- ── Ayuda ────────────────────────────────────────────── -->
+      <div class="menu-item-wrap">
+        <button class="menu-item" data-menu="ayuda">Ayuda</button>
+        <div class="dropdown hidden" id="dropdown-ayuda">
+          <div class="dropdown-item" data-action="shortcuts">Atajos de teclado<span class="dropdown-shortcut">?</span></div>
+          <div class="dropdown-item" data-action="about">Acerca de ClaudeBridge</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menubar-right">
+      <!-- Broadcast (visible solo con 2+ terminales abiertas) -->
+      <button class="bar-btn broadcast-btn hidden" id="btn-broadcast"
+              title="Activa/desactiva broadcast — Ctrl+B">
+        <span class="bar-btn-icon">📡</span>
+        <span>Broadcast</span>
+      </button>
+      <!-- CTAs principales -->
+      <button class="bar-btn swarm-btn" id="btn-swarm"
+              title="8 terminales en grilla 4×2 — Ctrl+Shift+K">
+        <span class="bar-btn-icon">⚡</span>
+        <span>Swarm 8</span>
+      </button>
+      <button class="bar-btn new-term-btn" id="btn-new-terminal"
+              title="Nueva terminal con Claude — Ctrl+K">
+        <span class="bar-btn-icon">+</span>
+        <span>Nueva Terminal</span>
+      </button>
+      <button class="icon-btn theme-toggle" id="btn-theme"
+              title="Cambiar tema claro / oscuro">
+        <span id="theme-icon">🌙</span>
+      </button>
+      <span class="clock" id="clock"></span>
+    </div>
+  </header>
+
+  {% if not pty_ready %}
+  <div class="pty-error-banner">
+    ⚠ {{ pty_error or "PTY no disponible. Las terminales no funcionarán." }}
+  </div>
+  {% endif %}
+
+  <!-- ── Desktop ──────────────────────────────────────────────────────── -->
+  <main class="desktop" id="desktop"></main>
+
+  <!-- Drop zone overlay (visible solo al arrastrar) -->
+  <div class="drop-zone hidden" id="drop-zone">
+    <div class="drop-zone-inner">
+      <div class="drop-zone-icon">📁</div>
+      <div class="drop-zone-text">Suelta para abrir aquí</div>
+    </div>
+  </div>
+
+  <!-- Snap preview (visible al arrastrar ventana cerca de un borde) -->
+  <div class="snap-preview hidden" id="snap-preview"></div>
+
+  <!-- Indicador flotante de broadcast -->
+  <div class="broadcast-indicator hidden" id="broadcast-indicator">
+    📡 BROADCAST ACTIVO — lo que escribas va a TODAS las terminales
+  </div>
+
+  <!-- ── Dock ─────────────────────────────────────────────────────────── -->
+  <div class="dock empty" id="dock"></div>
+
+  <!-- ── Toasts ───────────────────────────────────────────────────────── -->
+  <div id="toast-container"></div>
+
+  <!-- ── Context menu (clic derecho en titlebar) ──────────────────────── -->
+  <div class="ctx-menu hidden" id="ctx-menu">
+    <div class="ctx-item" data-act="rename">✏️  Renombrar...</div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-label">Color</div>
+    <div class="ctx-colors">
+      <button class="ctx-color" data-color="default" style="background:#888" title="Default"></button>
+      <button class="ctx-color" data-color="red"     style="background:#ef4444" title="Rojo"></button>
+      <button class="ctx-color" data-color="orange"  style="background:#f59e0b" title="Naranja"></button>
+      <button class="ctx-color" data-color="yellow"  style="background:#facc15" title="Amarillo"></button>
+      <button class="ctx-color" data-color="green"   style="background:#22c55e" title="Verde"></button>
+      <button class="ctx-color" data-color="blue"    style="background:#3b82f6" title="Azul"></button>
+      <button class="ctx-color" data-color="purple"  style="background:#a855f7" title="Morado"></button>
+      <button class="ctx-color" data-color="pink"    style="background:#ec4899" title="Rosa"></button>
+    </div>
+  </div>
+
+  <!-- ── Modal Nueva Terminal / Swarm ─────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal">
+      <h2 id="modal-title">Nueva Terminal</h2>
+      <div class="modal-subtitle" id="modal-subtitle">
+        Abre una terminal con Claude en la carpeta indicada.
+      </div>
+
+      <label for="modal-path">Carpeta de trabajo</label>
+      <div class="path-input-row">
+        <input type="text" id="modal-path"
+               value="{{ home_dir }}"
+               autocomplete="off" spellcheck="false" />
+        <button class="path-btn" id="btn-pick-folder" title="Selector nativo del SO">📁</button>
+        <button class="path-btn" id="btn-save-bookmark" title="Guardar como favorita">⭐</button>
+      </div>
+      <div class="modal-hint">Se lanzará <code>claude</code> automáticamente.</div>
+
+      <div class="bookmarks-section">
+        <label>Carpetas favoritas</label>
+        <div class="bookmarks-chips" id="bookmarks-chips"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="modal-cancel">Cancelar</button>
+        <button class="btn btn-primary"   id="modal-ok">Abrir Terminal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Prompts pro ───────────────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="prompts-overlay">
+    <div class="modal modal-prompts">
+      <div class="prompts-header">
+        <h2>🪄 Prompts profesionales</h2>
+        <button class="modal-close-btn" id="prompts-close">×</button>
+      </div>
+      <div class="modal-subtitle">
+        Plantillas para tareas técnicas de senior level. Click en uno para enviarlo a la terminal enfocada
+        (o a todas si tienes Broadcast activado).
+      </div>
+      <div class="prompts-grid" id="prompts-grid"></div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Atajos de teclado ─────────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="help-overlay">
+    <div class="modal modal-help">
+      <h2>Atajos de teclado</h2>
+      <div class="modal-subtitle">Pulsa <kbd>?</kbd> para ver/ocultar este panel.</div>
+      <table class="shortcuts-table">
+        <tr><td><kbd>Ctrl</kbd>+<kbd>K</kbd></td>            <td>Nueva terminal</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd></td><td>Swarm 8 terminales</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td>            <td>Abrir panel de Prompts</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td>            <td>Activar/desactivar Broadcast</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>M</kbd></td>            <td>Minimizar terminal enfocada</td></tr>
+        <tr><td><kbd>Alt</kbd>+<kbd>W</kbd></td>             <td>Cerrar terminal enfocada</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>1</kbd>..<kbd>9</kbd></td><td>Saltar a terminal N</td></tr>
+        <tr><td><kbd>Clic derecho</kbd> en titlebar</td>    <td>Renombrar / pintar terminal</td></tr>
+        <tr><td>Arrastrar ventana al borde</td>              <td>Snap a media pantalla / cuarto</td></tr>
+        <tr><td><kbd>?</kbd></td>                            <td>Mostrar esta ayuda</td></tr>
+        <tr><td><kbd>Esc</kbd></td>                          <td>Cerrar modal</td></tr>
+      </table>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="help-close">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Workspace profiles ────────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="profiles-overlay">
+    <div class="modal modal-profiles">
+      <div class="prompts-header">
+        <h2>📋 Workspace Profiles</h2>
+        <button class="modal-close-btn" id="profiles-close">×</button>
+      </div>
+      <div class="modal-subtitle">
+        Guarda tu setup completo (carpetas + nombres + colores + posiciones) y
+        restáuralo cuando quieras. Como sesiones de tmux pero con interfaz.
+      </div>
+
+      <label>Setup actual <span id="profiles-current-count" class="muted-pill"></span></label>
+      <div class="profile-save-row">
+        <input type="text" id="profile-name-input"
+               placeholder="Ej: 'Mi setup mañana', 'Code review backend'..."
+               autocomplete="off" spellcheck="false" />
+        <button class="btn btn-primary" id="btn-profile-save">💾  Guardar</button>
+      </div>
+      <div class="modal-hint">Se guardará en <code>.data/profiles.json</code> en el servidor.</div>
+
+      <label style="margin-top: 22px;">Tus profiles guardados</label>
+      <div class="profiles-list" id="profiles-list"></div>
+    </div>
+  </div>
+
+  <!-- xterm.js (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0.11.0/lib/addon-web-links.min.js"></script>
+
+  <!-- App -->
+  <script src="/static/app.js?v={{ cache_ver }}"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+# ───── Python ─────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual envs
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# ───── Node (por si acaso) ─────
+node_modules/
+package-lock.json
+
+# ───── Datos de runtime de ClaudeBridge ─────
+.data/
+
+# ───── IDE / editores ─────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ───── OS ─────
+Thumbs.db
+desktop.ini
+
+# ───── Logs ─────
+*.log
+
+# ───── Secretos (por si acaso) ─────
+.env
+*.pem
+*.key
