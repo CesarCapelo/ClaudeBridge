@@ -23,17 +23,89 @@ Lanzador local con estética de **macOS** para abrir múltiples sesiones de [Cla
 
 ## Instalación
 
-### Requisitos
-- Python 3.10+
-- `claude` instalado y en `PATH` (ver [docs oficiales](https://docs.claude.com/en/docs/claude-code/setup))
+> **¿Empiezas de cero?** Sigue los **4 pasos** en orden. Cada uno tiene un comando para verificar que quedó bien antes de pasar al siguiente.
 
-### Setup
+### Paso 1 — Git
+
+Necesario para clonar el repo.
+
+- **Windows**: [git-scm.com/download/win](https://git-scm.com/download/win)
+- **macOS**: viene preinstalado, o `brew install git`. Si no tienes brew: `xcode-select --install`.
+- **Linux (Debian/Ubuntu)**: `sudo apt install git`
+
+Verifica:
+```bash
+git --version
+```
+
+*Alternativa sin Git:* descarga el repo como ZIP desde GitHub → botón verde **Code** → **Download ZIP**.
+
+### Paso 2 — Node.js (≥ 18)
+
+Necesario para instalar el CLI de Claude Code.
+
+- **Windows / macOS**: instalador oficial en [nodejs.org](https://nodejs.org/) (versión LTS).
+- **macOS con brew**: `brew install node`
+- **Linux (Debian/Ubuntu)**:
+  ```bash
+  curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+  sudo apt install -y nodejs
+  ```
+
+Verifica:
+```bash
+node --version    # v18.x o superior
+npm --version
+```
+
+### Paso 3 — Python 3.10+
+
+Necesario para el backend Flask.
+
+- **Windows**: [python.org/downloads](https://www.python.org/downloads/) — ⚠ **marca la casilla "Add Python to PATH"** durante la instalación.
+- **macOS**: [python.org installer](https://www.python.org/downloads/macos/) (recomendado, trae `tkinter`). Si usas Homebrew: `brew install python python-tk`.
+- **Linux (Debian/Ubuntu)**: `sudo apt install python3 python3-pip python3-venv python3-tk`
+
+Verifica:
+```bash
+python --version       # o python3 --version → debe ser 3.10+
+```
+
+### Paso 4 — Claude Code CLI
 
 ```bash
-git clone https://github.com/<tu-usuario>/ClaudeBridge.git
+npm install -g @anthropic-ai/claude-code
+```
+
+Verifica:
+```bash
+claude --version
+```
+
+> **No ejecutes `claude login`** — ClaudeBridge inyecta automáticamente `ANTHROPIC_BASE_URL` y `ANTHROPIC_API_KEY` cuando lanza cada terminal, así que la autenticación ya está resuelta. Si el wizard te pide login al ejecutar `claude` suelto, ignóralo: cuando lo abras desde ClaudeBridge usará las credenciales pre-configuradas.
+
+### Setup del proyecto
+
+```bash
+git clone https://github.com/CesarCapelo/ClaudeBridge.git
 cd ClaudeBridge
+```
+
+**Linux / macOS** — usa un virtualenv (obligatorio en distros modernas por [PEP 668](https://peps.python.org/pep-0668/)):
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+**Windows**:
+
+```powershell
+pip install -r requirements.txt
+```
+
+> 💡 El `start.sh` detecta `.venv/` automáticamente y la activa, así que en Linux/macOS te basta con tenerla creada una vez.
 
 ---
 
@@ -79,12 +151,20 @@ Click en **`⚡ Swarm 8`** (o `Ctrl+Shift+K`) → se abren 8 terminales en grill
 Cuando hay 2+ terminales aparece el botón **📡 Broadcast** (o `Ctrl+B`).
 Una vez activado, lo que escribas en cualquier terminal se envía a **todas** simultáneamente. El borde de las ventanas se vuelve naranja para indicar el modo activo.
 
+### Prompts profesionales
+`Ctrl+P` abre un panel con plantillas para tareas técnicas senior (refactor, code review, debugging…). Click en una plantilla → se envía a la terminal enfocada (o a todas si `Broadcast` está activo).
+
+### Workspace Profiles
+Guarda tu setup completo (carpetas + nombres + colores + posiciones) como un perfil con `Ctrl+Shift+P` → **Cargar workspace…** / **Guardar workspace actual…**. Es como sesiones de `tmux` pero con UI. Se persisten en `.data/profiles.json`.
+
 ### Atajos
 
 | Atajo | Acción |
 |---|---|
 | `Ctrl+K` | Nueva terminal |
 | `Ctrl+Shift+K` | Swarm 8 |
+| `Ctrl+P` | Prompts profesionales |
+| `Ctrl+Shift+P` | Workspace profiles |
 | `Ctrl+B` | Toggle broadcast |
 | `Ctrl+M` | Minimizar terminal enfocada |
 | `Alt+W` | Cerrar terminal enfocada |
@@ -108,7 +188,18 @@ CLAUDE_ENV = {
 
 Para cambiarlas: edita `app.py` o exporta las variables antes de arrancar (los scripts `start.*` ya las ponen). El `os.environ.setdefault` respeta lo que ya tengas en tu shell.
 
-Puerto: por defecto `5050`. Cambia con `PORT=6000 python app.py`.
+Puerto: por defecto `5050`. Para cambiarlo:
+
+```bash
+# Linux / macOS
+PORT=6000 python app.py
+
+# Windows (CMD)
+set PORT=6000 && python app.py
+
+# Windows (PowerShell)
+$env:PORT=6000; python app.py
+```
 
 ---
 
@@ -168,6 +259,10 @@ Las PTYs viven en el servidor independientemente de si el WebSocket está conect
 | `GET`    | `/api/terminal/list` | Lista de PTYs vivas |
 | `DELETE` | `/api/terminal/<id>` | Termina PTY |
 | `GET`    | `/api/pick-folder` | Abre selector nativo, devuelve `{path}` |
+| `GET`    | `/api/git-branch?path=...` | Rama git de la carpeta indicada |
+| `GET`    | `/api/profiles` | Lista de workspace profiles |
+| `POST`   | `/api/profiles` | Guarda un profile. Body: `{name, terminals}` |
+| `DELETE` | `/api/profiles/<name>` | Borra un profile |
 | `WS`     | `/ws/<id>` | I/O bidireccional con el PTY |
 
 ---
@@ -187,7 +282,20 @@ Las PTYs viven en el servidor independientemente de si el WebSocket está conect
 
 **Las terminales no se abren / el reloj no se actualiza** — Cierra todos los procesos Python (`Get-Process python | Stop-Process -Force` en PowerShell, `pkill python` en Unix) y vuelve a lanzar. Una instancia vieja en el puerto 5050 puede estar interceptando los requests.
 
-**El botón 📁 no abre el selector** — En Linux, asegúrate de tener `tkinter` instalado (`sudo apt install python3-tk`). En Windows y macOS viene con Python.
+**El botón 📁 no abre el selector** — Falta `tkinter`:
+- Linux (Debian/Ubuntu): `sudo apt install python3-tk`
+- Linux (Fedora): `sudo dnf install python3-tkinter`
+- macOS con Homebrew Python: `brew install python-tk`
+- macOS con Python.org installer: ya viene incluido.
+- Windows: ya viene con Python.
+
+**`pip install` falla con `externally-managed-environment` (PEP 668)** — Distros modernas (Ubuntu 23+, Debian 12+, Fedora 38+, Homebrew) no dejan instalar en el sistema. Usa un virtualenv:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+El `start.sh` activará el `.venv` automáticamente la próxima vez.
 
 ---
 

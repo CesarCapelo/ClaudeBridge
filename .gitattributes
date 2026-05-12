@@ -1,0 +1,22 @@
+# Forzar LF en scripts ejecutables para Linux/macOS — si no, el shebang
+# se rompe en sistemas Unix cuando se commitea desde Windows.
+*.sh    text eol=lf
+start.sh text eol=lf
+
+# Forzar CRLF en scripts batch de Windows
+*.bat   text eol=crlf
+*.ps1   text eol=crlf
+
+# Texto normal: dejar que git decida en checkout, pero normalizar a LF en repo
+*.py    text eol=lf
+*.js    text eol=lf
+*.css   text eol=lf
+*.html  text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+*.txt   text eol=lf
+
+# Binarios: nunca tocar
+*.png   binary
+*.jpg   binary
+*.svg   text eol=lf
